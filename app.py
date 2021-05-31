@@ -22,15 +22,13 @@ session = Session(engine)
 app = Flask(__name__)
 
 
-app.config["JSON_SORT_KEYS"] = False
-
 #Homepage
 @app.route("/")
 def index():
     return (
-        f"~~~~~~~~~~~~~~~~~~~~~~<br/>"
+        f"~~~~~~~~~~~~~<br/>"
         f"Available Routes:<br/>"
-        f"~~~~~~~~~~~~~~~~~~~~~~<br/>"
+        f"~~~~~~~~~~~~~<br/>"
         f"Last year's precipitation: /api/v1.0/precipitation<br/>"
         f"List of all stations: /api/v1.0/stations<br/>"
         f"Temperature observations by date: /api/v1.0/tobs<br/>"
@@ -38,7 +36,7 @@ def index():
         f"Temp stats in a specified date range: /api/v1.0/2015-04-25/2016-01-05<br/>"
     )
 
-#Convert the query to a dictionary
+#Create precipitation page
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-22').filter(Measurement.date <= '2017-08-23').order_by(Measurement.date)
@@ -53,7 +51,7 @@ def precipitation():
     return jsonify(prcp_data)
     session.close()
 
-    
+ #Create stations page   
 @app.route("/api/v1.0/stations")
 def stations():
     results = session.query(Station.name, Measurement.station).filter(Station.station == Measurement.station).group_by(Station.name).all()
@@ -67,7 +65,8 @@ def stations():
     
     return jsonify(stations_data)
     session.close()
-    
+
+#Create tobs page    
 @app.route("/api/v1.0/tobs")
 def tobs():
     results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >='2016-08-22').filter(Measurement.date <= '2017-08-23').order_by(Measurement.date)
@@ -82,6 +81,7 @@ def tobs():
     return jsonify(tobs_data)
     session.close()
 
+#Create single date page
 @app.route("/api/v1.0/<start>")
 def temp_stats_start(start):
     results = session.query(func.min(Measurement.tobs).label('min'), func.avg(Measurement.tobs).label('avg'), func.max(Measurement.tobs).label('max')).filter(Measurement.date >= start).all()
@@ -98,6 +98,7 @@ def temp_stats_start(start):
     return jsonify(date_range_stats_data)
     session.close()
 
+#Create double date page
 @app.route("/api/v1.0/<start>/<end>")
 def temp_stats_start_end(start, end):
     results = session.query(func.min(Measurement.tobs).label('min'), func.avg(Measurement.tobs).label('avg'), func.max(Measurement.tobs).label('max')).filter(Measurement.date >= start).filter(Measurement.date <=end).all()
